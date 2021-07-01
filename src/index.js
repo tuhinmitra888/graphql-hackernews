@@ -17,6 +17,10 @@ const resolvers = {
   Query: {
     info: () => `This is the API of a Hackernews Clone`,
     feed: () => links,
+    link: (parent, args) => {
+      var index = parseInt(args.id.toString().replace('link-', ''))
+      return links[index]
+    }
   },
   Mutation: {
     // 2
@@ -28,7 +32,36 @@ const resolvers = {
       }
       links.push(link)
       return link
-    }
+    },
+    updateLink: (parent, args) => {
+      var linkToBeUpdated;
+
+      var counter = 0;
+      while(counter < links.length){
+        if(links[counter].id.toString() === args.id.toString()){
+           linkToBeUpdated = links[counter]
+           break
+        }
+        counter++
+      }
+      linkToBeUpdated.url = args.url
+      linkToBeUpdated.description = args.description
+      return linkToBeUpdated
+    },
+    deleteLink: (parent, args) => {
+      var linkToBeDeleted;
+
+      var counter = 0;
+      while(counter < links.length){
+        if(links[counter].id.toString() === args.id.toString()){
+          linkToBeDeleted = links[counter]
+          links.splice(counter, 1)
+          break
+        }
+        counter++
+      }
+      return linkToBeDeleted
+    },
   }
 } 
 
