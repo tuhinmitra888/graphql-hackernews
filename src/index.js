@@ -1,68 +1,22 @@
-const { ApolloServer } = require('apollo-server');
+const { ApolloServer } = require('apollo-server')
+const {PrismaClient} = require('@prisma/client')
+const { getUserId } = require('./utils');
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('fs')
+const path = require('path')
+const prisma = new PrismaClient()
+const Query = require('./resolvers/Query')
+const Mutation = require('./resolvers/Mutation')
+const User = require('./resolvers/User')
+const Link = require('./resolvers/Link')
 
 
 
-let links = [{
-    id: 'link-0',
-    url: 'www.howtographql.com',
-    description: 'Fullstack tutorial for GraphQL'
-}]
-
-// 2
-let idCount = links.length
 const resolvers = {
-  Query: {
-    info: () => `This is the API of a Hackernews Clone`,
-    feed: () => links,
-    link: (parent, args) => {
-      var index = parseInt(args.id.toString().replace('link-', ''))
-      return links[index]
-    }
-  },
-  Mutation: {
-    // 2
-    post: (parent, args) => {
-       const link = {
-        id: `link-${idCount++}`,
-        description: args.description,
-        url: args.url,
-      }
-      links.push(link)
-      return link
-    },
-    updateLink: (parent, args) => {
-      var linkToBeUpdated;
-
-      var counter = 0;
-      while(counter < links.length){
-        if(links[counter].id.toString() === args.id.toString()){
-           linkToBeUpdated = links[counter]
-           break
-        }
-        counter++
-      }
-      linkToBeUpdated.url = args.url
-      linkToBeUpdated.description = args.description
-      return linkToBeUpdated
-    },
-    deleteLink: (parent, args) => {
-      var linkToBeDeleted;
-
-      var counter = 0;
-      while(counter < links.length){
-        if(links[counter].id.toString() === args.id.toString()){
-          linkToBeDeleted = links[counter]
-          links.splice(counter, 1)
-          break
-        }
-        counter++
-      }
-      return linkToBeDeleted
-    },
-  }
+  Query,
+  Mutation,
+  User,
+  Link
 } 
 
 const server = new ApolloServer({
@@ -71,6 +25,16 @@ const server = new ApolloServer({
     'utf8'
   ),
   resolvers,
+  context: ({ req }) => {
+    return {
+      ...req,
+      prisma,
+      userId:
+        req && req.headers.authorization
+          ? getUserId(req)
+          : null
+    };
+  }
 })
 
 server
